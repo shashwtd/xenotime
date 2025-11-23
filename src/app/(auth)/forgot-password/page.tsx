@@ -1,84 +1,42 @@
 "use client";
 
-import { FormEvent, useState } from "react";
 import Link from "next/link";
-import { Mail, ArrowRight, Loader2 } from "lucide-react";
-import { getSupabaseClient } from "@/lib/supabaseClient";
-
-const supabase = getSupabaseClient();
-
-type StatusState =
-  | { state: "idle" }
-  | { state: "loading" }
-  | { state: "success"; message: string }
-  | { state: "error"; message: string };
+import { Mail, ArrowRight } from "lucide-react";
 
 export default function ForgotPasswordPage() {
-  const [status, setStatus] = useState<StatusState>({ state: "idle" });
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setStatus({ state: "loading" });
-
-    const formData = new FormData(event.currentTarget);
-    const email = String(formData.get("email"));
-
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/login`,
-    });
-
-    if (error) {
-      setStatus({ state: "error", message: error.message });
-      return;
-    }
-
-    setStatus({
-      state: "success",
-      message: "Magic link sent. Check your inbox to finish resetting your password.",
-    });
-  };
-
   return (
-    <div className="auth-shell">
-      <div>
-        <div className="link-pill w-fit">
-          <Mail size={16} />
-          Reset access
+    <div className="space-y-8">
+      <div className="space-y-3">
+        <div className="inline-flex w-fit items-center gap-2 rounded-full border border-black/10 bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-(--accent-soft)">
+          <Mail size={14} />
+          Passwordless access
         </div>
-        <h2 className="mt-4 text-2xl font-semibold">Send a reset link</h2>
+        <h2 className="text-3xl font-semibold">No reset link needed</h2>
         <p className="text-(--accent-soft)">
-          We will email you a secure link to update your credentials and get back into flow.
+          xenotime authenticates exclusively through Google, so there are no passwords to manage or recover. Use the
+          same Google account you started with and you&apos;re back in immediately.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="input-shell">
-          <label htmlFor="email">Email</label>
-          <input id="email" name="email" type="email" placeholder="you@example.com" required />
-        </div>
+      <div className="space-y-4 rounded-2xl border border-black/5 bg-white/80 p-6 text-sm text-(--accent-soft)">
+        <p>
+          If you&apos;re having trouble accessing that Google account, follow Google&apos;s recovery steps or drop us a note
+          and we&apos;ll help fast.
+        </p>
+        <a className="inline-flex items-center gap-2 font-semibold text-(--accent) underline" href="mailto:support@xenotime.app">
+          Email support@xenotime.app
+          <ArrowRight size={16} />
+        </a>
+      </div>
 
-        <div className="form-actions">
-          <button className="cta-button" type="submit" disabled={status.state === "loading"}>
-            {status.state === "loading" ? (
-              <>
-                <Loader2 className="animate-spin" size={18} />
-                Sending link
-              </>
-            ) : (
-              <>
-                Email reset link
-                <ArrowRight size={18} />
-              </>
-            )}
-          </button>
-          <Link className="secondary-link" href="/login">
-            Back to sign in
-          </Link>
-        </div>
-
-        {status.state === "error" && <p className="status-text error">{status.message}</p>}
-        {status.state === "success" && <p className="status-text success">{status.message}</p>}
-      </form>
+      <div>
+        <Link
+          className="inline-flex items-center justify-center gap-2 rounded-full border border-black/10 bg-white px-6 py-3 font-semibold text-(--accent) transition hover:-translate-y-0.5"
+          href="/login"
+        >
+          ← Back to login
+        </Link>
+      </div>
     </div>
   );
 }

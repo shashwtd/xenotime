@@ -1,88 +1,160 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
-import { LogIn, Loader2, ArrowRight } from "lucide-react";
+import Image from "next/image";
+import { motion } from "framer-motion";
+import { Loader2, Mail } from "lucide-react";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 
 const supabase = getSupabaseClient();
 
-type StatusState =
-  | { state: "idle" }
-  | { state: "loading" }
-  | { state: "success"; message: string }
-  | { state: "error"; message: string };
+type Status = "idle" | "loading" | "success" | "error";
 
 export default function LoginPage() {
-  const [status, setStatus] = useState<StatusState>({ state: "idle" });
+  const [googleStatus, setGoogleStatus] = useState<Status>("idle");
+  const [emailStatus, setEmailStatus] = useState<Status>("idle");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setStatus({ state: "loading" });
+  const redirectTo = useMemo(() => {
+    if (typeof window === "undefined") return undefined;
+    return `${window.location.origin}/dashboard`;
+  }, []);
 
-    const formData = new FormData(event.currentTarget);
-    const email = String(formData.get("email"));
-    const password = String(formData.get("password"));
-
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const handleGoogle = async () => {
+    setGoogleStatus("loading");
+    setMessage("");
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo,
+      },
+    });
 
     if (error) {
-      setStatus({ state: "error", message: error.message });
+      setGoogleStatus("error");
+      setMessage(error.message);
       return;
     }
 
-    setStatus({ state: "success", message: "Signed in. Redirecting..." });
+    setGoogleStatus("success");
+    setMessage("Redirecting to Google…");
+  };
+
+  const handleEmailLink = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!email) {
+      setEmailStatus("error");
+      setMessage("Enter your email first.");
+      return;
+    }
+    setEmailStatus("loading");
+    setMessage("");
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: redirectTo,
+      },
+    });
+
+    if (error) {
+      setEmailStatus("error");
+      setMessage(error.message);
+      return;
+    }
+
+    setEmailStatus("success");
+    setMessage("Magic link sent. Check your inbox.");
   };
 
   return (
-    <div className="auth-shell">
-      <div>
-        <div className="link-pill w-fit">
-          <LogIn size={16} />
-          Welcome back
-        </div>
-        <h2 className="mt-4 text-2xl font-semibold">Log in to xenotime</h2>
-        <p className="text-(--accent-soft)">
-          Pick up where you left off—your timers, streaks, and study rituals are ready.
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="space-y-6"
+    >
+      <div className="space-y-1">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Welcome back</h1>
+        <p className="text-sm text-(--accent-soft)">
+          Pick up where you left off
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="input-shell">
-          <label htmlFor="email">Email</label>
-          <input id="email" name="email" type="email" placeholder="you@example.com" required />
+      <div className="space-y-4">
+        <button
+          type="button"
+          onClick={handleGoogle}
+          disabled={googleStatus === "loading"}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-(--accent) transition-colors hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {googleStatus === "loading" ? (
+            <>
+              <Loader2 className="animate-spin" size={16} />
+              Connecting…
+            </>
+          ) : (
+            <>
+              <Image src="/google-logo.svg" alt="" width={16} height={16} />
+              Continue with Google
+            </>
+          )}
+        </button>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-black/10" />
+          </div>
+          <div className="relative flex justify-center text-xs">
+            <span className="bg-background px-2 text-(--accent-soft)">or</span>
+          </div>
         </div>
 
-        <div className="input-shell">
-          <label htmlFor="password">Password</label>
-          <input id="password" name="password" type="password" placeholder="••••••••" required />
-        </div>
-
-        <div className="form-actions">
-          <button className="cta-button" type="submit" disabled={status.state === "loading"}>
-            {status.state === "loading" ? (
+        <form onSubmit={handleEmailLink} className="space-y-2">
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="you@example.com"
+            className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-sm text-(--accent) placeholder:text-(--accent-soft)/40 focus:border-(--accent) focus:outline-none focus:ring-1 focus:ring-(--accent-warm)/20"
+            required
+          />
+          <button
+            type="submit"
+            disabled={emailStatus === "loading"}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-(--accent) px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-(--accent)/90 disabled:cursor-not-allowed disabled:opacity-60"
+            style={{ color: "#ffffff" }}
+          >
+            {emailStatus === "loading" ? (
               <>
-                <Loader2 className="animate-spin" size={18} />
-                Signing in
+                <Loader2 className="animate-spin" size={16} />
+                Sending…
               </>
             ) : (
               <>
-                Enter workspace
-                <ArrowRight size={18} />
+                <Mail size={16} />
+                Email me a link
               </>
             )}
           </button>
-          <Link className="secondary-link" href="/register">
-            Need an account? Join xenotime →
-          </Link>
-          <Link className="secondary-link" href="/forgot-password">
-            Forgot password?
-          </Link>
-        </div>
+        </form>
 
-        {status.state === "error" && <p className="status-text error">{status.message}</p>}
-        {status.state === "success" && <p className="status-text success">{status.message}</p>}
-      </form>
-    </div>
+        {message && (
+          <p className={`text-sm ${emailStatus === "error" || googleStatus === "error" ? "text-red-600" : "text-(--accent-soft)"}`}>
+            {message}
+          </p>
+        )}
+      </div>
+
+      <p className="text-sm text-(--accent-soft)">
+        Need an account?{" "}
+        <Link className="font-medium text-(--accent) underline underline-offset-2" href="/register">
+          Sign up
+        </Link>
+      </p>
+    </motion.div>
   );
 }
