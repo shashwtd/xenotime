@@ -4,7 +4,7 @@ import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Mail, Lock, User } from "lucide-react";
 import { getSupabaseClient } from "@/lib/supabaseClient";
 
 const supabase = getSupabaseClient();
@@ -15,6 +15,8 @@ export default function RegisterPage() {
   const [googleStatus, setGoogleStatus] = useState<Status>("idle");
   const [emailStatus, setEmailStatus] = useState<Status>("idle");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [message, setMessage] = useState("");
 
   const redirectTo = useMemo(() => {
@@ -22,7 +24,10 @@ export default function RegisterPage() {
     return `${window.location.origin}/dashboard`;
   }, []);
 
+  const isLoading = googleStatus === "loading" || emailStatus === "loading";
+
   const handleGoogle = async () => {
+    if (isLoading) return;
     setGoogleStatus("loading");
     setMessage("");
     const { error } = await supabase.auth.signInWithOAuth({
@@ -42,19 +47,25 @@ export default function RegisterPage() {
     setMessage("Redirecting to Google…");
   };
 
-  const handleEmailInvite = async (event: FormEvent<HTMLFormElement>) => {
+  const handleEmailSignUp = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!email) {
+    if (isLoading) return;
+    
+    if (!email || !password) {
       setEmailStatus("error");
-      setMessage("Pop your email in first.");
+      setMessage("Please fill in all fields.");
       return;
     }
     setEmailStatus("loading");
     setMessage("");
 
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error } = await supabase.auth.signUp({
       email,
+      password,
       options: {
+        data: {
+          full_name: fullName,
+        },
         emailRedirectTo: redirectTo,
       },
     });
@@ -66,99 +77,138 @@ export default function RegisterPage() {
     }
 
     setEmailStatus("success");
-    setMessage("Invite sent. Watch your inbox for the link.");
+    setMessage("Account created! Please check your email to confirm.");
   };
 
   return (
-    <div className="space-y-12">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="space-y-4">
-        <p className="inline-flex items-center gap-2 text-sm font-medium text-(--accent-soft)">
-          <Sparkles size={16} />
-          Start something focused
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="w-full space-y-6"
+    >
+      <div className="space-y-1.5 text-center sm:text-left">
+        <h2 className="font-serif text-3xl font-medium tracking-tight text-foreground">Create an account</h2>
+        <p className="text-sm text-(--accent-soft)">
+          Start your journey to better focus today.
         </p>
-        <h1 className="text-4xl font-semibold tracking-tight text-foreground">Create your xenotime studio</h1>
-        <p className="max-w-md text-base text-(--accent-soft)">
-          Your playlists, rituals, and streaks live here. Sign up with Google or request a magic link and we’ll prep your workspace.
-        </p>
-      </motion.div>
+      </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.1 }}
-        className="space-y-6 rounded-3xl border border-black/5 bg-linear-to-br from-white via-[#fef9f2] to-[#fdeedd] p-8 shadow-[0_25px_55px_-35px_rgba(15,10,6,0.35)]"
-      >
+      <div className="space-y-4">
         <button
           type="button"
           onClick={handleGoogle}
-          disabled={googleStatus === "loading"}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-(--accent) transition-colors hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={isLoading}
+          className="flex w-full cursor-pointer items-center justify-center gap-3 rounded-xl border border-black/10 bg-white px-4 py-3 text-sm font-medium text-foreground shadow-sm transition-all hover:bg-gray-50 hover:border-black/20 focus:outline-none focus:ring-2 focus:ring-(--accent-warm) focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {googleStatus === "loading" ? (
-            <>
-              <Loader2 className="animate-spin" size={16} />
-              Connecting…
-            </>
+            <Loader2 className="animate-spin text-(--accent-soft)" size={18} />
           ) : (
-            <>
-              <Image src="/google-logo.svg" alt="" width={16} height={16} />
-              Continue with Google
-            </>
+            <Image src="/google-logo.svg" alt="Google" width={18} height={18} />
           )}
+          <span>Sign up with Google</span>
         </button>
 
-        <div className="flex items-center gap-4 text-xs font-medium text-(--accent-soft)/70">
-          <span className="h-px flex-1 bg-black/10" />
-          or
-          <span className="h-px flex-1 bg-black/10" />
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-black/10" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-3 text-(--accent-soft)">Or</span>
+          </div>
         </div>
 
-        <form onSubmit={handleEmailInvite} className="space-y-3">
-          <label htmlFor="signup-email" className="text-sm font-medium text-(--accent)">
-            Email address
-          </label>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <input
-              id="signup-email"
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="you@example.com"
-              className="flex-1 rounded-2xl border border-black/10 bg-white/90 px-4 py-3 text-(--accent) shadow-inner shadow-black/5 focus:border-(--accent) focus:outline-none focus:ring-2 focus:ring-[rgba(242,178,107,0.35)]"
-              required
-            />
-            <button
-              type="submit"
-              disabled={emailStatus === "loading"}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-(--accent) px-6 py-3 font-semibold text-white transition-colors duration-200 hover:bg-(--accent)/90 disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {emailStatus === "loading" ? (
-                <>
-                  <Loader2 className="animate-spin" size={18} />
-                  Sending
-                </>
-              ) : (
-                "Email me an invite"
-              )}
-            </button>
+        <form onSubmit={handleEmailSignUp} className="space-y-4">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="fullName" className="sr-only">Full Name</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-(--accent-soft)">
+                  <User size={18} />
+                </div>
+                <input
+                  id="fullName"
+                  type="text"
+                  value={fullName}
+                  onChange={(event) => setFullName(event.target.value)}
+                  placeholder="Full Name"
+                  disabled={isLoading}
+                  className="block w-full rounded-xl border border-black/10 bg-white pl-10 pr-4 py-3 text-sm text-foreground placeholder:text-(--accent-soft)/60 focus:border-(--accent)/60 focus:outline-none focus:ring-2 focus:ring-(--accent)/30 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
+                  required
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="email" className="sr-only">Email address</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-(--accent-soft)">
+                  <Mail size={18} />
+                </div>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="name@example.com"
+                  disabled={isLoading}
+                  className="block w-full rounded-xl border border-black/10 bg-white pl-10 pr-4 py-3 text-sm text-foreground placeholder:text-(--accent-soft)/60 focus:border-(--accent)/60 focus:outline-none focus:ring-2 focus:ring-(--accent)/30 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
+                  required
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="password" className="sr-only">Password</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-(--accent-soft)">
+                  <Lock size={18} />
+                </div>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="Password"
+                  disabled={isLoading}
+                  className="block w-full rounded-xl border border-black/10 bg-white pl-10 pr-4 py-3 text-sm text-foreground placeholder:text-(--accent-soft)/60 focus:border-(--accent)/60 focus:outline-none focus:ring-2 focus:ring-(--accent)/30 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
+                  required
+                />
+              </div>
+            </div>
           </div>
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-(--accent) px-4 py-3 text-sm font-semibold text-white shadow-md transition-all hover:bg-(--accent)/90 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-(--accent) focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {emailStatus === "loading" ? (
+              <Loader2 className="animate-spin" size={18} />
+            ) : (
+              <span>Create account</span>
+            )}
+          </button>
         </form>
 
         {message && (
-          <p className={`text-sm ${emailStatus === "error" || googleStatus === "error" ? "text-red-600" : "text-(--accent-soft)"}`}>
+          <motion.div 
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`rounded-lg p-3 text-sm ${
+            emailStatus === "error" || googleStatus === "error" 
+              ? "bg-red-50 text-red-600 border border-red-100" 
+              : "bg-green-50 text-green-600 border border-green-100"
+          }`}>
             {message}
-          </p>
+          </motion.div>
         )}
-      </motion.div>
+      </div>
 
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.15 }}>
-        <p className="text-sm text-(--accent-soft)">
-          Already in the flow?{" "}
-          <Link className="font-semibold text-(--accent) underline decoration-1 underline-offset-2" href="/login">
-            Head to login
-          </Link>
-        </p>
-      </motion.div>
-    </div>
+      <p className="text-center text-sm text-(--accent-soft)">
+        Already have an account?{" "}
+        <Link className="font-semibold text-foreground hover:underline decoration-2 underline-offset-2 transition-all" href="/login">
+          Sign in
+        </Link>
+      </p>
+    </motion.div>
   );
 }
