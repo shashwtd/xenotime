@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -11,7 +11,7 @@ const supabase = getSupabaseClient();
 
 type Status = "idle" | "loading" | "success" | "error";
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<Status>("idle");
@@ -144,17 +144,29 @@ export default function ResetPasswordPage() {
       )}
 
       {message && isSessionValid && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
           className={`rounded-lg p-3 text-sm ${
-          status === "error" 
-            ? "bg-red-50 text-red-600 border border-red-100" 
+          status === "error"
+            ? "bg-red-50 text-red-600 border border-red-100"
             : "bg-green-50 text-green-600 border border-green-100"
         }`}>
           {message}
         </motion.div>
       )}
     </motion.div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex justify-center py-10">
+        <Loader2 className="animate-spin text-(--accent-soft)" size={24} />
+      </div>
+    }>
+      <ResetPasswordForm />
+    </Suspense>
   );
 }
