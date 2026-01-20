@@ -68,7 +68,7 @@ export function CreateSubjectModal({ isOpen, onClose, onCreate }: CreateSubjectM
                   <div className="p-2 rounded-xl bg-orange-50 text-orange-500">
                     <Sparkles size={20} />
                   </div>
-                  <h3 className="text-xl font-medium text-foreground">Create New Subject</h3>
+                  <h3 className="text-xl font-semibold text-foreground">Create New Subject</h3>
                 </div>
                 <button
                   onClick={onClose}
@@ -167,7 +167,7 @@ export function CreateSubjectModal({ isOpen, onClose, onCreate }: CreateSubjectM
 
                     <div className="mt-8 relative z-10">
                       <div className="h-2 w-12 rounded-full bg-black/5 mb-4" />
-                      <h3 className="font-serif text-2xl font-medium text-foreground leading-tight">
+                      <h3 className="text-2xl font-semibold text-foreground leading-tight">
                         {name || "Subject Name"}
                       </h3>
                       <p className="text-sm text-(--accent-soft) mt-2">0h 0m focused</p>

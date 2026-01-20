@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Flame } from "lucide-react";
+import { Plus, Flame, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/components/auth-context";
 import { Subject, DEFAULT_SUBJECTS } from "@/components/dashboard/types";
@@ -65,7 +65,7 @@ export default function DashboardPage() {
     <div className="mx-auto max-w-6xl px-6 py-8 lg:px-12 lg:py-10">
       {/* Header */}
       <header className="mb-8 flex flex-col gap-2">
-        <h1 className="font-serif text-3xl font-medium tracking-tight text-foreground">
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground">
           Good morning, {userName}
         </h1>
         <div className="flex items-center gap-2 text-sm text-(--accent-soft)">
@@ -145,12 +145,22 @@ export default function DashboardPage() {
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="w-full max-w-lg overflow-hidden rounded-3xl bg-white p-8 shadow-2xl pointer-events-auto"
+                className="w-full max-w-lg overflow-hidden rounded-3xl bg-white p-6 shadow-2xl pointer-events-auto ring-1 ring-black/5"
               >
-                <h3 className="text-2xl font-medium text-foreground mb-2">Select a Subject</h3>
-                <p className="text-sm text-(--accent-soft) mb-6">Choose what you want to focus on right now.</p>
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-xl font-semibold text-foreground">Select Subject</h3>
+                    <p className="text-sm text-(--accent-soft)">What are we working on?</p>
+                  </div>
+                  <button 
+                    onClick={() => setIsStartModalOpen(false)}
+                    className="p-2 rounded-full hover:bg-black/5 text-(--accent-soft) transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
                 
-                <div className="grid grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar">
                   {subjects.map((subject) => {
                     const Icon = SUBJECT_ICONS[subject.icon || DEFAULT_ICON] || SUBJECT_ICONS[DEFAULT_ICON];
                     return (
@@ -160,15 +170,18 @@ export default function DashboardPage() {
                           setActiveSubject(subject);
                           setIsStartModalOpen(false);
                         }}
-                        className="flex items-center gap-3 rounded-xl border border-black/5 p-3 text-left transition-all hover:border-(--accent) hover:bg-(--accent)/5 hover:shadow-md group"
+                        className="flex items-center gap-4 rounded-2xl border border-black/5 p-4 text-left transition-all hover:border-(--accent)/30 hover:bg-(--accent)/5 hover:shadow-sm group active:scale-[0.98]"
                       >
                         <div 
-                          className="h-10 w-10 rounded-lg flex items-center justify-center text-white shadow-sm shrink-0"
+                          className="h-12 w-12 rounded-xl flex items-center justify-center text-white shadow-sm shrink-0 transition-transform group-hover:scale-110"
                           style={{ background: subject.color }}
                         >
-                          <Icon size={18} strokeWidth={2} />
+                          <Icon size={22} strokeWidth={2} />
                         </div>
-                        <span className="font-medium text-foreground group-hover:text-(--accent) truncate">{subject.name}</span>
+                        <div className="min-w-0">
+                          <span className="block font-semibold text-foreground group-hover:text-(--accent) truncate text-base">{subject.name}</span>
+                          <span className="text-xs text-(--accent-soft) font-medium uppercase tracking-wide">Start Session</span>
+                        </div>
                       </button>
                     );
                   })}

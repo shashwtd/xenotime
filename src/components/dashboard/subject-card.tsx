@@ -44,7 +44,7 @@ export function SubjectCard({ subject, onStart }: SubjectCardProps) {
       </div>
 
       <div className="mb-6">
-        <h3 className="font-serif text-xl font-medium text-foreground leading-tight">{subject.name}</h3>
+        <h3 className="text-xl font-semibold text-foreground leading-tight">{subject.name}</h3>
       </div>
 
       <button

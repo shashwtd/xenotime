@@ -53,15 +53,17 @@ export function FocusTimer({ subject, onStop, onStart }: FocusTimerProps) {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-4xl border border-black/5 bg-white p-8 shadow-sm lg:p-10"
+        className="relative overflow-hidden rounded-4xl border border-black/5 bg-linear-to-br from-white to-orange-50/30 p-8 shadow-sm lg:p-10"
       >
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="absolute top-0 right-0 -mt-16 -mr-16 h-64 w-64 rounded-full bg-orange-100/20 blur-3xl pointer-events-none" />
+        
+        <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-6">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-50 text-orange-500 shadow-inner">
-              <Flame size={32} fill="currentColor" />
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white border border-orange-100 text-orange-500 shadow-sm">
+              <Flame size={32} fill="currentColor" className="animate-pulse" />
             </div>
             <div>
-              <h2 className="font-serif text-2xl font-medium text-foreground">Ready to focus?</h2>
+              <h2 className="text-2xl font-semibold tracking-tight text-foreground">Ready to focus?</h2>
               <p className="text-sm text-(--accent-soft) mt-1">Start a session to keep your streak alive.</p>
             </div>
           </div>
@@ -359,7 +361,7 @@ export function FocusTimer({ subject, onStop, onStart }: FocusTimerProps) {
                    <div className="w-2 h-2 rounded-full" style={{ background: subject.color }} />
                    <span className="text-xs font-medium uppercase tracking-wider text-(--accent-soft)">{subject.name}</span>
                 </div>
-                <h2 className="text-4xl font-serif font-medium text-foreground">Deep Focus Session</h2>
+                <h2 className="text-4xl font-medium tracking-tight text-foreground">Deep Focus Session</h2>
               </div>
 
               {renderTimerFace("large")}
